@@ -87,4 +87,19 @@ public class ReadActivity extends BaseActivity<ReadPresenter> implements ReadCon
         }
         return message;
     }
+
+    @Override
+    public void showLoading() {
+
+    }
+
+    @Override
+    public void hideLoading() {
+
+    }
+
+    @Override
+    public void showMessage(String message) {
+
+    }
 }

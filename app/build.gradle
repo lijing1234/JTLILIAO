@@ -62,4 +62,5 @@ dependencies {
     compile 'com.jakewharton.timber:timber:4.5.1'
     compile 'com.alibaba:fastjson:1.2.24'
     compile 'com.google.guava:guava:20.0-rc1'
+    compile 'com.github.markomilos:paginate:0.5.1'
 }

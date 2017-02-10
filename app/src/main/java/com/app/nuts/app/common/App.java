@@ -69,7 +69,7 @@ public class App extends BaseApplication {
     protected GlobeConfigModule getGlobeConfigModule() {
         return GlobeConfigModule
                 .buidler()
-                .baseurl(Api.url)
+                .baseurl(Api.APP_DOMAIN)
                 .globeHttpHandler(new GlobeHttpHandler() {// 这里可以提供一个全局处理http响应结果的处理类,
                     // 这里可以比客户端提前一步拿到服务器返回的结果,可以做一些操作,比如token超时,重新获取
                     @Override

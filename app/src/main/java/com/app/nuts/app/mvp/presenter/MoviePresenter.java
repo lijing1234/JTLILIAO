@@ -1,6 +1,7 @@
 package com.app.nuts.app.mvp.presenter;
 
 import android.app.Application;
+import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
 import com.app.nuts.app.mvp.contract.MovieContract;
@@ -26,6 +27,8 @@ public class MoviePresenter extends BasePresenter<MovieContract.Model, MovieCont
     private AppManager mAppManager;
     private Application mApplication;
     private MovieInfo movieInfo;
+    private boolean isFirst = true;
+    private int start = 0;
 
     @Inject
     public MoviePresenter(MovieContract.Model model, MovieContract.View view, RxErrorHandler handler, AppManager appManager, Application application) {
@@ -35,24 +38,41 @@ public class MoviePresenter extends BasePresenter<MovieContract.Model, MovieCont
         this.mAppManager = appManager;
     }
 
-    public void getMovieInfo(int start, int count) {
-        mModel.getMovieInfo(start, count)
-                .subscribeOn(Schedulers.io())
-                .doOnSubscribe(() -> {
+    public void getMovieInfo(boolean pullToRefresh) {
 
+        if (pullToRefresh) start = 0;
+
+        boolean isEvictCache = pullToRefresh;//是否驱逐缓存,为ture即不使用缓存,每次上拉刷新即需要最新数据,则不使用缓存
+
+        if (pullToRefresh && isFirst) {//默认在第一次上拉刷新时使用缓存
+            isFirst = false;
+            isEvictCache = false;
+        }
+
+        mModel.getMovieInfo(start, isEvictCache)
+                .subscribeOn(Schedulers.io())
+//                .retryWhen(new RetryWithDelay(3, 2))
+                .doOnSubscribe(() -> {
+                    if (pullToRefresh)
+                        mView.showLoading();//显示上拉刷新的进度条
+                    else
+                        mView.startLoadMore();//显示下拉加载更多的进度条
                 })
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doAfterTerminate(() -> {
-
+                    if (pullToRefresh)
+                        mView.hideLoading();//隐藏上拉刷新的进度条
+                    else
+                        mView.endLoadMore();//隐藏下拉加载更多的进度条
                 })
-                .retryWhen(new RetryWithDelay(3, 2))
                 .compose(RxUtils.bindToLifecycle(mView))
                 .subscribe(new ErrorHandleSubscriber<String>(mErrorHandler) {
                     @Override
                     public void onNext(String movieInfosStr) {
+                        start = start + 10;
                         movieInfo = JSON.parseObject(movieInfosStr, MovieInfo.class);
-                        mView.showMovieInfo(movieInfosStr);
+                        mView.showMovieInfo(movieInfo);
                     }
                 });
     }
